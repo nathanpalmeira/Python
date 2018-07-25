@@ -1,0 +1,91 @@
+import random
+class Perceptron:
+    
+    def __init__(self, amostras, saidas, taxas_aprendisado=0.1, epocas=1000, limiar=-1):
+        self.amostras = amostras
+        self.saidas = saidas
+        self.taxas_aprendisado = taxas_aprendisado
+        self.epocas = epocas
+        self.limiar = limiar
+        self.n_amostras = len(amostras)
+        self.n_atributos = len(amostras[0])
+        self.pesos=[]
+     
+    def treinar(self):
+         
+        for amostra in self.amostras:
+            amostra.insert(0,-1)
+        for i in range(self.n_atributos):
+            self.pesos.append(random.random())
+        self.pesos.insert(0, self.limiar)
+        n_epocas = 0 #Contador de epocas
+        
+        while True:
+            
+            erro= False #Erro inicialmente inexiste
+            
+            for i in range(self.n_amostras):
+                u=0
+                for j in range(self.n_atributos+1):
+                    u += self.pesos[j] * self.amostras[i][j]
+                y= self.degrau(u) #obtem a saida da rede
+                #verifica se a saida da rede é diferente da saida desejada
+                if y!= self.saidas[i]:
+                    #calcula o erro
+                    erro_aux = self.saidas[i]-y
+                    #faz o ajuste dos pesos para cada elemento da amostra
+                    for j in range(self.n_atributos + 1):
+                        self.pesos[j] = self.pesos[j]+ self.taxas_aprendisado * erro_aux * self.amostras[i][j]
+                    erro = True # o erro e ainda existe
+            n_epocas +=1
+            #criterio de parada        
+            if not erro or n_epocas > self.epocas:
+                break
+        
+       # print(n_epocas)       
+   
+    def degrau(self,u):
+        if u>=0:
+            return 1
+        return 0
+            
+    def teste(self, amostra):
+        amostra.insert(0,-1)
+        u=0
+        for i in range(self.n_atributos+1):
+            u += self.pesos[i] * amostra[i]
+        y = self.degrau(u)
+        return y
+
+#MONTA AS ENTRADAS E SAIDAS
+import seaborn as sns
+
+from bokeh.sampledata.iris import flowers as dados
+#MONTA AS ENTRADAS
+i=0
+entradas= []
+
+while i < (len(dados['sepal_length'])-50):
+    
+    entradas.append([dados['sepal_width'][i],dados['sepal_length'][i]])
+    i+=1
+
+#len(dados['sepal_length'])
+#d
+#MONTA AS SAIDAS
+i=0
+saidas=[]
+while i < (len(dados['species'])-50):
+
+    if dados['species'][i]=='setosa':
+        saidas.append(0)
+    else:
+        saidas.append(1)
+    i+=1
+
+#PASSA OS PARAMETROS PARA TREINO
+rede = Perceptron(entradas,saidas, taxas_aprendisado=0.05)
+rede.treinar()
+
+# CONSULTA DADOS
+rede.teste([2,5])
